@@ -1029,7 +1029,26 @@ input:focus, select:focus, textarea:focus {
   overflow-wrap: break-word;
   word-break: break-word;
 }
-.contenu-sequence table { width: 100%; border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; }
+/* Tableaux du contenu riche (CKEditor) : structure tabulaire préservée.
+   display:block sur <table> casse l'algorithme tabulaire du navigateur
+   (cellules désarticulées) — ne jamais le réutiliser ici. */
+.contenu-sequence { overflow-x: auto; }
+.contenu-sequence figure.table { margin: 1em 0; }
+.contenu-sequence table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+.contenu-sequence th,
+.contenu-sequence td {
+  border: 1px solid var(--couleur-bordure);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.contenu-sequence th {
+  background: var(--couleur-accent-doux);
+  font-weight: 600;
+}
+.contenu-sequence tbody tr:nth-child(even) td {
+  background: var(--couleur-fond);
+}
 .contenu-sequence iframe, .contenu-sequence canvas {
   max-width: 100%;
   border-radius: var(--rayon-petit);
