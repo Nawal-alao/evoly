@@ -357,8 +357,7 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
-
+# CORS_ALLOWED_ORIGINS est défini en tête de fichier (localhost + variable
+# d'environnement). Ne pas le redéfinir ici : une seconde affectation
+# écraserait les origines de production lues depuis l'env.
 CORS_ALLOW_CREDENTIALS = True
