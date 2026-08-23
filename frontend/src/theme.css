@@ -116,6 +116,9 @@ select:focus-visible, textarea:focus-visible {
    Entrée douce des pages
    =========================================================== */
 .entree-douce {
+  /* Absorbe l'espace libre de #root (flex column) : garde le footer
+     collé en bas même sur les pages courtes ou en cours de chargement. */
+  flex: 1 0 auto;
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 400ms ease-out, transform 400ms ease-out;
@@ -2037,7 +2040,7 @@ dialog.dialogue h3 { margin-bottom: 6px; }
    =========================================================== */
 footer {
   border-top: 1px solid var(--couleur-bordure);
-  padding: 32px 24px;
+  padding: 14px 24px;
   text-align: center;
   color: var(--couleur-texte-doux);
   font-size: 0.875rem;
