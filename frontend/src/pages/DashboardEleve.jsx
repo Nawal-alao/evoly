@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Bookmark, Users, CreditCard, CalendarDays, Trophy, BookOpen, FileText, MessageCircle, GraduationCap } from 'lucide-react'
+import { Bookmark, Users, CreditCard, CalendarDays, Trophy, BookOpen, FileText, MessageCircle, GraduationCap, Play } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import api from '../api/axios'
@@ -73,6 +73,7 @@ export default function DashboardEleve() {
   const [suivis, setSuivis] = useState([])
   const [progressions, setProgressions] = useState([])
   const [abonnement, setAbonnement] = useState(null)
+  const [derniereActivite, setDerniereActivite] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const messageMotivant = useMemo(() =>
@@ -84,6 +85,9 @@ export default function DashboardEleve() {
       api.get('comptes/mes-suivis/').then(r => setSuivis(r.data)),
       api.get('evaluations/progressions/').then(r => setProgressions(r.data)),
       api.get('abonnements/mon-abonnement/').then(r => setAbonnement(r.data.abonnement_actif)),
+      api.get('pedagogie/cours/derriere-activite/').then(r => {
+        if (r.data && r.data.cours_id) setDerniereActivite(r.data)
+      }),
     ]).finally(() => setLoading(false))
   }, [])
 
@@ -162,6 +166,14 @@ export default function DashboardEleve() {
                 </div>
               ))}
             </div>
+            <div className="carte-reprendre-lecture">
+              <div className="reprendre-lecture-texte">
+                <Squelette largeur={120} hauteur={12} style={{ marginBottom: 6 }} />
+                <Squelette largeur={180} hauteur={18} style={{ marginBottom: 4 }} />
+                <Squelette largeur={220} hauteur={12} />
+              </div>
+              <Squelette largeur={100} hauteur={38} arrondi="var(--rayon-petit)" />
+            </div>
           </>
         }
       >
@@ -213,7 +225,7 @@ export default function DashboardEleve() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0, flexWrap: 'wrap' }}>
                     <Etoiles note={s.note_evaluation} noteCible={s.note_evaluation} estActive suiviId={s.id} onNoter={noter} />
-                    <Link to={`/conversations/${s.id}`} className="btn btn-secondaire" style={{ flexShrink: 0 }}>Écrire</Link>
+                    <Link to={`/conversations/${s.id}`} className="btn btn-primaire" style={{ flexShrink: 0 }}>Écrire</Link>
                   </div>
                 </li>
               ))}
@@ -262,6 +274,24 @@ export default function DashboardEleve() {
           )}
         </div>
       </ChargementFluide>
+
+      {derniereActivite && (
+        <div className="carte-reprendre-lecture">
+          <div className="reprendre-lecture-texte">
+            <p className="reprendre-lecture-label">Reprends ta lecture</p>
+            <p className="reprendre-lecture-cours">{derniereActivite.titre}</p>
+            <p className="reprendre-lecture-detail">
+              {derniereActivite.matiere_nom} — Séquence {derniereActivite.ordre} : {derniereActivite.titre_sequence}
+            </p>
+          </div>
+          <Link
+            to={`/cours/${derniereActivite.cours_id}#sequence-${derniereActivite.sequence_id}`}
+            className="btn btn-primaire reprendre-lecture-btn"
+          >
+            <Play size={16} fill="currentColor" /> Continuer
+          </Link>
+        </div>
+      )}
 
       <div className="raccourcis-dashboard">
         {raccourcis.map(r => (

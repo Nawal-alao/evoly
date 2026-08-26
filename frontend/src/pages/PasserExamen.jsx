@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify'
 import loadKatex from '../utils/katexLoader'
 import { useNotification } from '../context/NotificationContext'
 import api from '../api/axios'
+import ContenuRiche from '../components/ContenuRiche'
 
 const KATEX_DELIMITERS = {
   delimiters: [
@@ -46,6 +47,7 @@ export default function PasserExamen() {
   const { notifier } = useNotification()
   const [examen, setExamen] = useState(null)
   const [questions, setQuestions] = useState([])
+  const [exercicesGroupes, setExercicesGroupes] = useState([])
   const [reponses, setReponses] = useState({})
   const [sending, setSending] = useState(false)
 
@@ -53,6 +55,7 @@ export default function PasserExamen() {
     api.get(`evaluations/examens/${id}/passer/`).then(r => {
       setExamen(r.data.examen)
       setQuestions(r.data.questions)
+      setExercicesGroupes(r.data.examen.exercices_groupes || [])
     })
   }, [id])
 
@@ -60,11 +63,17 @@ export default function PasserExamen() {
     setReponses(prev => ({ ...prev, [qId]: value }))
   }
 
+  const toutesLesQuestions = [
+    ...exercicesGroupes.flatMap(ex => ex.etapes || []),
+    ...questions,
+  ]
+  const totalQuestions = toutesLesQuestions.length
+
   const handleSubmit = (e) => {
     e.preventDefault()
     setSending(true)
     const payload = {
-      reponses: questions.map(q => ({
+      reponses: toutesLesQuestions.map(q => ({
         question_id: q.id,
         reponse: reponses[q.id] || '',
       })),
@@ -80,6 +89,8 @@ export default function PasserExamen() {
 
   if (!examen) return <main><div className="etat-vide"><p>Chargement…</p></div></main>
 
+  let compteur = 0
+
   return (
     <main>
       <p className="fil-ariane">
@@ -90,33 +101,58 @@ export default function PasserExamen() {
         <p className="eyebrow">{examen.matiere?.nom}</p>
         <h1>{examen.titre}</h1>
         <p className="texte-doux">
-          {questions.length} question{questions.length > 1 ? 's' : ''} — réponds du mieux que tu peux, tu peux revenir en arrière avant de valider.
+          {totalQuestions} question{totalQuestions > 1 ? 's' : ''} — réponds du mieux que tu peux, tu peux revenir en arrière avant de valider.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        {questions.map((q, i) => (
-          <div key={q.id} className="question-bloc">
-            <p className="numero-question">Question {i + 1} / {questions.length}</p>
-            <EnonceAvecMath html={q.enonce} />
+        {exercicesGroupes.map(ex => (
+          <div key={ex.id} className="exercice-groupe-bloc">
+            <div className="exercice-groupe-enonce">
+              <ContenuRiche contenu={ex.enonce_principal} className="contenu-exercice-groupe" />
+            </div>
 
-            {q.type_question === 'QCM' && q.choix_reponses ? (
-              q.choix_reponses.map((choix, ci) => (
-                <div key={ci} className="choix-reponse">
-                  <input type="radio" id={`q${q.id}-c${ci}`} name={`q${q.id}`}
-                    value={choix} required
-                    checked={reponses[q.id] === choix}
-                    onChange={() => setReponse(q.id, choix)} />
-                  <label htmlFor={`q${q.id}-c${ci}`}><KaTeXText text={choix} /></label>
+            {(ex.etapes || []).map((etape, idx) => {
+              compteur++
+              return (
+                <div key={etape.id} className="question-bloc etape-cascade">
+                  <p className="numero-question">Étape {idx + 1} / {ex.etapes.length}</p>
+                  <EnonceAvecMath html={etape.enonce} />
+
+                  <input type="text" placeholder="Réponse courte" required
+                    value={reponses[etape.id] || ''}
+                    onChange={(e) => setReponse(etape.id, e.target.value)} />
                 </div>
-              ))
-            ) : (
-              <input type="text" placeholder="Ta réponse" required
-                value={reponses[q.id] || ''}
-                onChange={(e) => setReponse(q.id, e.target.value)} />
-            )}
+              )
+            })}
           </div>
         ))}
+
+        {questions.map((q, i) => {
+          compteur++
+          return (
+            <div key={q.id} className="question-bloc">
+              <p className="numero-question">Question {compteur} / {totalQuestions}</p>
+              <EnonceAvecMath html={q.enonce} />
+
+              {q.type_question === 'QCM' && q.choix_reponses ? (
+                q.choix_reponses.map((choix, ci) => (
+                  <div key={ci} className="choix-reponse">
+                    <input type="radio" id={`q${q.id}-c${ci}`} name={`q${q.id}`}
+                      value={choix} required
+                      checked={reponses[q.id] === choix}
+                      onChange={() => setReponse(q.id, choix)} />
+                    <label htmlFor={`q${q.id}-c${ci}`}><KaTeXText text={choix} /></label>
+                  </div>
+                ))
+              ) : (
+                <input type="text" placeholder="Ta réponse" required
+                  value={reponses[q.id] || ''}
+                  onChange={(e) => setReponse(q.id, e.target.value)} />
+              )}
+            </div>
+          )
+        })}
 
         <div className="barre-actions-examen">
           <button type="submit" className="btn btn-primaire" disabled={sending}>

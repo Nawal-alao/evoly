@@ -105,3 +105,16 @@ class CoursFavori(models.Model):
 
     def __str__(self):
         return f"{self.eleve} a en favori {self.cours}"
+
+
+class CoursProgression(models.Model):
+    eleve = models.ForeignKey('comptes.Eleve', on_delete=models.CASCADE, related_name="progressions_cours")
+    cours = models.ForeignKey(Cours, on_delete=models.CASCADE, related_name="progressions")
+    derniere_sequence = models.ForeignKey(Sequence, on_delete=models.SET_NULL, null=True, blank=True)
+    date_mise_a_jour = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("eleve", "cours")
+
+    def __str__(self):
+        return f"{self.eleve} — {self.cours} — séquence {self.derniere_sequence}"

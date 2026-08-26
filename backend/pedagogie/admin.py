@@ -10,7 +10,7 @@ qu'on a construit ensemble sur cette app :
 
 from django.contrib import admin, messages
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
-from .models import Matiere, CoefficientMatiere, Cours, Sequence
+from .models import Matiere, CoefficientMatiere, Cours, Sequence, CoursProgression
 from evaluations.services import generer_examen_ia
 
 
@@ -73,3 +73,10 @@ class CoursAdmin(ModelAdmin):
     search_fields = ("titre",)
     inlines = [SequenceInline]
     actions = [generer_examen_facile, generer_examen_moyen, generer_examen_difficile]
+
+
+@admin.register(CoursProgression)
+class CoursProgressionAdmin(ModelAdmin):
+    list_display = ("eleve", "cours", "derniere_sequence", "date_mise_a_jour")
+    list_filter = ("cours__matiere", "cours__classe_scolaire")
+    search_fields = ("eleve__prenom", "eleve__nom", "cours__titre")

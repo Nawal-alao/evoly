@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Send, ArrowLeft, MoreHorizontal, Copy } from 'lucide-react'
+import { Send, ArrowLeft, MoreHorizontal, Copy, Paperclip, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import api from '../api/axios'
 import AvatarInitiales from '../components/AvatarInitiales'
+
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+
+function mediaUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return `${API_BASE}${path}`
+}
 
 function formaterDateSep(iso) {
   if (!iso) return ''
@@ -32,6 +40,8 @@ function grouperMessages(messages) {
     if (
       derniere &&
       derniere.auteurId === m.auteur?.id &&
+      !m.image &&
+      !derniere.messages[derniere.messages.length - 1].image &&
       (new Date(m.date_envoi) - new Date(derniere.messages[derniere.messages.length - 1].date_envoi)) < 5 * 60 * 1000
     ) {
       derniere.messages.push(m)
@@ -63,7 +73,7 @@ function DoubleCheckIcon({ size = 16 }) {
   )
 }
 
-function BulleMessage({ contenu, bullClass, tailClass, footer }) {
+function BulleMessage({ contenu, image, bullClass, tailClass, footer, onImageClick }) {
   const texteRef = useRef(null)
   const [expanded, setExpanded] = useState(false)
   const [isLong, setIsLong] = useState(false)
@@ -79,13 +89,24 @@ function BulleMessage({ contenu, bullClass, tailClass, footer }) {
   }, [contenu])
 
   const tronque = isLong && !expanded
+  const hasImage = !!image
 
   return (
     <div className="conv-bulle-collapsible">
       <div className={`conv-bulle ${bullClass}${tailClass ? ` ${tailClass}` : ''}${tronque ? ' conv-bulle-tronquee' : ''}`}>
-        <p ref={texteRef} className={`conv-texte${tronque ? ' conv-texte-tronque' : ''}`}>
-          {contenu}
-        </p>
+        {hasImage && (
+          <img
+            src={image}
+            alt="Image envoyée"
+            className="conv-bulle-image"
+            onClick={() => onImageClick?.(image)}
+          />
+        )}
+        {contenu && (
+          <p ref={texteRef} className={`conv-texte${tronque ? ' conv-texte-tronque' : ''}`}>
+            {contenu}
+          </p>
+        )}
         {footer && <div className="conv-bulle-footer">{footer}</div>}
       </div>
       {isLong && (
@@ -132,6 +153,24 @@ function MenuContextuel({ x, y, texte, onCopier, onFermer }) {
   )
 }
 
+function ModalImage({ src, onFermer }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onFermer() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onFermer])
+
+  return createPortal(
+    <div className="modal-image-overlay" onClick={onFermer}>
+      <button type="button" className="modal-image-close" onClick={onFermer} aria-label="Fermer">
+        <X size={24} strokeWidth={2} />
+      </button>
+      <img src={src} alt="Image en plein écran" className="modal-image-img" onClick={(e) => e.stopPropagation()} />
+    </div>,
+    document.body
+  )
+}
+
 export default function ConversationDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -147,9 +186,14 @@ export default function ConversationDetail() {
   const [menuCtx, setMenuCtx] = useState(null)
   const [newMsgCount, setNewMsgCount] = useState(0)
 
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [modalImage, setModalImage] = useState(null)
+
   const scrollRef = useRef(null)
   const textareaRef = useRef(null)
   const bottomRef = useRef(null)
+  const fileInputRef = useRef(null)
   const scrollEstEnBas = useRef(true)
 
   const ajusterHauteur = useCallback(() => {
@@ -159,9 +203,7 @@ export default function ConversationDetail() {
     el.style.height = Math.min(el.scrollHeight, 140) + 'px'
   }, [])
 
-  useEffect(() => {
-    ajusterHauteur()
-  }, [contenu, ajusterHauteur])
+  useEffect(() => { ajusterHauteur() }, [contenu, ajusterHauteur])
 
   useEffect(() => {
     let ignore = false
@@ -206,20 +248,50 @@ export default function ConversationDetail() {
     }
   }, [messages, user])
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      notifier('Seules les images sont acceptées.', 'error')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      notifier('Image trop lourde (max 5 Mo).', 'error')
+      return
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const annulerImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview)
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const handleSend = useCallback((e) => {
     e.preventDefault()
-    if (!contenu.trim() || sending) return
-    setSending(true)
     const txt = contenu.trim()
-    api.post(`communaute/conversations/${id}/envoyer/`, { contenu: txt }).then(r => {
+    if ((!txt && !imageFile) || sending) return
+    setSending(true)
+
+    const formData = new FormData()
+    if (txt) formData.append('contenu', txt)
+    if (imageFile) formData.append('image', imageFile)
+
+    api.post(`communaute/conversations/${id}/envoyer/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => {
       setMessages(prev => [...prev, r.data])
       setContenu('')
+      annulerImage()
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     }).catch(() => {
       notifier("Une erreur est survenue, réessaie dans un instant.", 'error')
     }).finally(() => setSending(false))
-  }, [contenu, sending, id, notifier])
+  }, [contenu, imageFile, sending, id, notifier])
 
   const copierMessage = useCallback((texte) => {
     navigator.clipboard.writeText(texte).then(() => {
@@ -276,23 +348,15 @@ export default function ConversationDetail() {
     })
   })
 
+  const canSend = contenu.trim() || imageFile
+
   return (
     <main className="conv-page">
       <div className="conv-header">
-        <button
-          type="button"
-          className="conv-retour"
-          onClick={() => navigate('/conversations')}
-          aria-label="Retour aux conversations"
-        >
+        <button type="button" className="conv-retour" onClick={() => navigate('/conversations')} aria-label="Retour aux conversations">
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <AvatarInitiales
-          prenom={suivi.interlocuteur_prenom}
-          nom={suivi.interlocuteur?.split(' ').slice(1).join(' ')}
-          taille={36}
-          role={roleInterlocuteur}
-        />
+        <AvatarInitiales prenom={suivi.interlocuteur_prenom} nom={suivi.interlocuteur?.split(' ').slice(1).join(' ')} taille={36} role={roleInterlocuteur} />
         <div className="conv-header-info">
           <span className="conv-header-nom">{suivi.interlocuteur}</span>
           <span className="conv-header-meta">
@@ -314,7 +378,6 @@ export default function ConversationDetail() {
                 </div>
               )
             }
-
             if (item.type === 'nouveaux') {
               return (
                 <div key={item.key} className="conv-sep-nouveaux">
@@ -332,10 +395,7 @@ export default function ConversationDetail() {
             const contentClass = item.estMien ? 'conv-content-mien' : 'conv-content-autre'
 
             return (
-              <div
-                key={m.id}
-                className={`conv-row ${rowClass} ${showHeader ? 'conv-row-premier' : 'conv-row-suite'}`}
-              >
+              <div key={m.id} className={`conv-row ${rowClass} ${showHeader ? 'conv-row-premier' : 'conv-row-suite'}`}>
                 {!item.estMien && (
                   <div className="conv-avatar-col">
                     {showHeader ? (
@@ -356,8 +416,10 @@ export default function ConversationDetail() {
                   <div className="conv-bulle-wrap">
                     <BulleMessage
                       contenu={m.contenu}
+                      image={mediaUrl(m.image)}
                       bullClass={bullClass}
                       tailClass={item.dernierDuGroupe ? (item.estMien ? 'conv-bulle-tail-mien' : 'conv-bulle-tail-autre') : ''}
+                      onImageClick={setModalImage}
                       footer={item.estMien ? (
                         <>
                           <span className="conv-msg-time">{formaterHeure(m.date_envoi)}</span>
@@ -400,26 +462,44 @@ export default function ConversationDetail() {
         </div>
 
         {newMsgCount > 0 && (
-          <button
-            type="button"
-            className="conv-scroll-bottom"
-            onClick={() => {
-              bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-              setNewMsgCount(0)
-            }}
-          >
+          <button type="button" className="conv-scroll-bottom" onClick={() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); setNewMsgCount(0) }}>
             ↓ {newMsgCount} nouveau{newMsgCount > 1 ? 'x' : ''}
           </button>
         )}
       </div>
 
       <div className="conv-input-zone">
+        {imagePreview && (
+          <div className="conv-image-preview">
+            <img src={imagePreview} alt="Aperçu" className="conv-image-preview-img" />
+            <button type="button" className="conv-image-preview-annuler" onClick={annulerImage} aria-label="Annuler l'image">
+              <X size={16} strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
+
         <form className="conv-input-form" onSubmit={handleSend}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileSelect}
+            className="conv-file-input"
+          />
+          <button
+            type="button"
+            className="conv-attach-btn"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Joindre une photo"
+          >
+            <Paperclip size={20} strokeWidth={2} />
+          </button>
+
           <textarea
             ref={textareaRef}
             className="conv-textarea"
-            placeholder="Écris ton message..."
-            required
+            placeholder={imageFile ? 'Ajoute un message (optionnel)…' : 'Écris ton message...'}
             rows={1}
             value={contenu}
             onChange={e => setContenu(e.target.value)}
@@ -430,26 +510,17 @@ export default function ConversationDetail() {
               }
             }}
           />
-          <button
-            type="submit"
-            className="conv-send"
-            disabled={sending || !contenu.trim()}
-            aria-label="Envoyer"
-          >
+          <button type="submit" className="conv-send" disabled={sending || !canSend} aria-label="Envoyer">
             <Send size={18} strokeWidth={2} />
           </button>
         </form>
       </div>
 
       {menuCtx && (
-        <MenuContextuel
-          x={menuCtx.x}
-          y={menuCtx.y}
-          texte={menuCtx.texte}
-          onCopier={copierMessage}
-          onFermer={() => setMenuCtx(null)}
-        />
+        <MenuContextuel x={menuCtx.x} y={menuCtx.y} texte={menuCtx.texte} onCopier={copierMessage} onFermer={() => setMenuCtx(null)} />
       )}
+
+      {modalImage && <ModalImage src={modalImage} onFermer={() => setModalImage(null)} />}
     </main>
   )
 }

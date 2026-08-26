@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
+import ChampMotDePasse from '../components/ChampMotDePasse'
 
 const CLASSES = [
   { value: '6EME', label: 'Sixième' },
@@ -130,7 +131,7 @@ export default function InscriptionEleve() {
             <FieldErrors errors={erreurs.username} />
 
             <label htmlFor="password">Mot de passe</label>
-            <input id="password" type="password" required autoComplete="new-password" value={form.password} onChange={set('password')} />
+            <ChampMotDePasse id="password" required autoComplete="new-password" value={form.password} onChange={set('password')} />
             <FieldErrors errors={erreurs.password} />
 
             <button type="submit" className="btn btn-primaire" disabled={sending}>

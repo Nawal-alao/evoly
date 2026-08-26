@@ -76,7 +76,8 @@ class MessagePrive(models.Model):
         "comptes.SuiviMentor", on_delete=models.CASCADE, related_name="messages_prives"
     )
     auteur = models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages_prives_envoyes")
-    contenu = models.TextField()
+    contenu = models.TextField(blank=True, default='')
+    image = models.ImageField(upload_to='devoirs/', null=True, blank=True)
     date_envoi = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(max_length=10, choices=Statut.choices, default=Statut.VISIBLE)
     lu = models.BooleanField(default=False, help_text="Lu par le destinataire.")
@@ -85,5 +86,6 @@ class MessagePrive(models.Model):
         ordering = ["date_envoi"]
  
     def __str__(self):
-        return f"{self.auteur} — {self.suivi} : {self.contenu[:40]}..."
+        text = self.contenu[:40] if self.contenu else '📷 Image'
+        return f"{self.auteur} — {self.suivi} : {text}..."
  

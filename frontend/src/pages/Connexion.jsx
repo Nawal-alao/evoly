@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
+import ChampMotDePasse from '../components/ChampMotDePasse'
 
 export default function Connexion() {
   const { login, user } = useAuth()
@@ -65,9 +66,8 @@ export default function Connexion() {
             />
 
             <label htmlFor="password">Mot de passe</label>
-            <input
+            <ChampMotDePasse
               id="password"
-              type="password"
               required
               autoComplete="current-password"
               value={password}

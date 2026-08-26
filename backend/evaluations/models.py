@@ -42,12 +42,30 @@ class Examen(models.Model):
  
  
  
+class ExerciceGroupe(models.Model):
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name="exercices_groupes")
+    enonce_principal = CKEditor5Field(config_name='default')
+    ordre = models.PositiveSmallIntegerField()
+
+    class Meta:
+        ordering = ["ordre"]
+
+    def __str__(self):
+        return f"Exercice {self.ordre} — {self.examen}"
+
+
 class Question(models.Model):
     class Type(models.TextChoices):
         CHOIX_MULTIPLE = "QCM", "Choix multiple"
         REPONSE_LIBRE = "LIBRE", "Réponse libre"
- 
+        COURTE = "COURTE", "Réponse courte"
+
     examen = models.ForeignKey(Examen, on_delete=models.CASCADE, related_name="questions")
+    groupe = models.ForeignKey(
+        ExerciceGroupe, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="etapes",
+    )
+    ordre_dans_groupe = models.PositiveSmallIntegerField(null=True, blank=True)
  
     # AVANT : enonce = models.TextField()
     enonce = CKEditor5Field(config_name='default')

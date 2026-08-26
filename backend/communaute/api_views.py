@@ -109,7 +109,7 @@ class ConversationsListAPIView(generics.ListAPIView):
                 'interlocuteur': interlocuteur,
                 'interlocuteur_prenom': interlocuteur_prenom,
                 'matiere': s.matiere.nom,
-                'dernier_message': dernier_msg.contenu if dernier_msg else None,
+                'dernier_message': (dernier_msg.contenu or '📷 Image') if dernier_msg else None,
                 'dernier_message_date': dernier_msg.date_envoi.isoformat() if dernier_msg else None,
                 'messages_non_lus': non_lus,
             })
@@ -159,11 +159,19 @@ class EnvoyerMessagePriveAPIView(APIView):
     def post(self, request, pk):
         suivi = get_object_or_404(_suivis_de_lutilisateur(request.user), pk=pk)
         contenu = request.data.get('contenu', '').strip()
-        if not contenu:
-            return Response({'detail': 'Contenu requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        image = request.FILES.get('image')
 
-        statut = MessagePrive.Statut.EN_ATTENTE if contient_mot_interdit(contenu) else MessagePrive.Statut.VISIBLE
-        msg = MessagePrive.objects.create(suivi=suivi, auteur=request.user, contenu=contenu, statut=statut)
+        if not contenu and not image:
+            return Response(
+                {'detail': 'Envoie au moins un texte ou une image.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        statut = MessagePrive.Statut.EN_ATTENTE if contenu and contient_mot_interdit(contenu) else MessagePrive.Statut.VISIBLE
+        msg = MessagePrive.objects.create(
+            suivi=suivi, auteur=request.user,
+            contenu=contenu, image=image, statut=statut,
+        )
 
         serializer = MessagePriveSerializer(msg)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

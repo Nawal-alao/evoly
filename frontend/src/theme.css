@@ -315,6 +315,39 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--couleur-accent-doux);
 }
 
+/* Champ mot de passe avec toggle visibility */
+.champ-mdp-wrapper {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.champ-mdp-wrapper input {
+  padding-right: 44px;
+  margin-bottom: 0;
+}
+
+.bouton-toggle-mdp {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--couleur-texte-doux, #888);
+  border-radius: var(--rayon-petit);
+  transition: color 0.15s, background 0.15s;
+}
+
+.bouton-toggle-mdp:hover {
+  color: var(--couleur-texte);
+  background: var(--couleur-bordure, #e0e0e0);
+}
+
 /* ===========================================================
    Pages d'authentification (connexion / inscription)
    =========================================================== */
@@ -746,6 +779,55 @@ input:focus, select:focus, textarea:focus {
   line-height: 1.5;
 }
 
+/* Carte reprendre la lecture */
+.carte-reprendre-lecture {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-accent);
+  border-radius: var(--rayon);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+.reprendre-lecture-texte {
+  min-width: 0;
+  flex: 1;
+}
+.reprendre-lecture-label {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--couleur-accent);
+}
+.reprendre-lecture-cours {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--couleur-texte);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reprendre-lecture-detail {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--couleur-texte-doux);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reprendre-lecture-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 /* Raccourcis dashboard */
 .raccourcis-dashboard {
   display: grid;
@@ -1173,6 +1255,46 @@ input:focus, select:focus, textarea:focus {
   border-top: 1px solid var(--couleur-bordure);
   margin-top: 8px;
   z-index: 2;
+}
+
+/* Exercices en cascade (groupes d'étapes) */
+.exercice-groupe-bloc {
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-accent);
+  border-radius: var(--rayon);
+  padding: 26px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  min-width: 0;
+}
+.exercice-groupe-enonce {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--couleur-bordure);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+.etape-cascade {
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--couleur-accent-doux);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+}
+.numero-etape-correction {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--couleur-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.correction-groupe .reponse-ligne {
+  border-bottom: none;
+  padding: 8px 0 8px 16px;
+}
+.correction-groupe .reponse-ligne:last-child {
+  padding-bottom: 0;
 }
 
 .resultat-hero {
@@ -1616,6 +1738,111 @@ input:focus, select:focus, textarea:focus {
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+/* — Joindre une image — */
+.conv-file-input { display: none; }
+.conv-attach-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--couleur-fond-carte);
+  color: var(--couleur-texte-doux);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: flex-end;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.conv-attach-btn:hover {
+  background: var(--couleur-accent-doux);
+  color: var(--couleur-accent);
+}
+.conv-image-preview {
+  position: relative;
+  margin-bottom: 6px;
+  display: inline-flex;
+}
+.conv-image-preview-img {
+  max-width: 220px;
+  max-height: 160px;
+  border-radius: var(--rayon);
+  object-fit: cover;
+  border: 2px solid var(--couleur-bordure);
+}
+.conv-image-preview-annuler {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+.conv-image-preview-annuler:hover { background: rgba(0,0,0,0.8); }
+
+/* — Image dans les bulles — */
+.conv-bulle-image {
+  display: block;
+  max-width: 280px;
+  max-height: 300px;
+  border-radius: var(--rayon-sm);
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid var(--couleur-bordure);
+  margin-bottom: 4px;
+  transition: transform 0.15s ease;
+}
+.conv-bulle-image:hover { transform: scale(1.02); }
+
+/* — Modale image plein écran — */
+.modal-image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: pointer;
+}
+.modal-image-img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 8px;
+  object-fit: contain;
+  cursor: default;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.modal-image-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.modal-image-close:hover { background: rgba(255,255,255,0.3); }
 
 /* — Bulles — */
 .conv-row {
@@ -2170,6 +2397,18 @@ footer {
   .raccourci-carte {
     padding: 14px;
     gap: 10px;
+  }
+
+  /* Reprendre la lecture : empiler sur mobile */
+  .carte-reprendre-lecture {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+  }
+  .reprendre-lecture-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   /* Empiler les titres de section + lien */

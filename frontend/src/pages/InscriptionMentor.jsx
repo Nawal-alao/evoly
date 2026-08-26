@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import api from '../api/axios'
+import ChampMotDePasse from '../components/ChampMotDePasse'
 
 function FieldErrors({ errors }) {
   if (!errors) return null
@@ -134,7 +135,7 @@ export default function InscriptionMentor() {
             <FieldErrors errors={erreurs.username} />
 
             <label htmlFor="password">Mot de passe</label>
-            <input id="password" type="password" required autoComplete="new-password" value={form.password} onChange={set('password')} />
+            <ChampMotDePasse id="password" required autoComplete="new-password" value={form.password} onChange={set('password')} />
             <FieldErrors errors={erreurs.password} />
 
             <button type="submit" className="btn btn-primaire" disabled={sending}>

@@ -22,6 +22,9 @@ export default function CoursDetail() {
   const [favori, setFavori] = useState(false)
   const [loadingFavori, setLoadingFavori] = useState(false)
   const observerRef = useRef(null)
+  const debounceRef = useRef(null)
+  const activeSeqRef = useRef(null)
+  const readyForObserver = useRef(false)
 
   const isEleve = user?.classe_scolaire !== undefined
 
@@ -33,16 +36,49 @@ export default function CoursDetail() {
       if (r.data.sequences?.length) {
         const hash = window.location.hash.replace('#sequence-', '')
         const fromHash = r.data.sequences.find(s => String(s.id) === hash)
-        setActiveSeq(fromHash ? fromHash.id : r.data.sequences[0].id)
+        if (fromHash) {
+          setActiveSeq(fromHash.id)
+          setTimeout(() => {
+            const el = document.getElementById(`sequence-${fromHash.id}`)
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            readyForObserver.current = true
+          }, 400)
+        } else if (isEleve) {
+          api.get(`pedagogie/cours/${id}/progression/`).then(res => {
+            if (res.data.sequence_id) {
+              const saved = r.data.sequences.find(s => s.id === res.data.sequence_id)
+              if (saved) {
+                setActiveSeq(saved.id)
+                setTimeout(() => {
+                  const el = document.getElementById(`sequence-${saved.id}`)
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  readyForObserver.current = true
+                }, 400)
+              } else {
+                setActiveSeq(r.data.sequences[0].id)
+                readyForObserver.current = true
+              }
+            } else {
+              setActiveSeq(r.data.sequences[0].id)
+              readyForObserver.current = true
+            }
+          }).catch(() => {
+            setActiveSeq(r.data.sequences[0].id)
+          })
+        } else {
+          setActiveSeq(r.data.sequences[0].id)
+          readyForObserver.current = true
+        }
       }
     })
-  }, [id])
+  }, [id, isEleve])
 
   // IntersectionObserver : synchronise activeSeq avec la séquence visible
   useEffect(() => {
     if (!cours?.sequences?.length) return
 
     const handleIntersect = (entries) => {
+      if (!readyForObserver.current) return
       for (const entry of entries) {
         if (entry.isIntersecting) {
           const id = entry.target.id.replace('sequence-', '')
@@ -78,6 +114,25 @@ export default function CoursDetail() {
       }
     }
   }, [activeSeq])
+
+  // Sauvegarde la position de lecture (debounce 1s + flush forcé au démontage)
+  useEffect(() => {
+    if (!activeSeq || !isEleve) return
+
+    activeSeqRef.current = activeSeq
+
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      api.post(`pedagogie/cours/${id}/progression/`, { sequence_id: activeSeq }).catch(() => {})
+    }, 1000)
+
+    return () => {
+      clearTimeout(debounceRef.current)
+      if (activeSeqRef.current) {
+        api.post(`pedagogie/cours/${id}/progression/`, { sequence_id: activeSeqRef.current }).catch(() => {})
+      }
+    }
+  }, [activeSeq, id, isEleve])
 
   const scrollToSeq = useCallback((seqId) => {
     setActiveSeq(seqId)

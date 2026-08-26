@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from .models import Examen, Question, ReponseEleve, Resultat, Progression
 from .serializers import (
-    ExamenSerializer, QuestionSerializer, QuestionCorrectionSerializer,
+    ExamenSerializer, ExamenDetailSerializer, QuestionSerializer, QuestionCorrectionSerializer,
     ResultatSerializer, ReponseEleveDetailSerializer, ProgressionSerializer,
 )
 
@@ -44,11 +44,11 @@ class PasserExamenAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        # Ensure exam is accessible per security rules
         examen = get_object_or_404(_examens_accessibles_pour(request.user), pk=pk)
-        questions = examen.questions.all().order_by('id')
-        serializer = QuestionSerializer(questions, many=True)
-        return Response({'examen': ExamenSerializer(examen).data, 'questions': serializer.data})
+        questions_sans_groupe = examen.questions.filter(groupe__isnull=True).order_by('id')
+        examen_data = ExamenDetailSerializer(examen).data
+        questions_data = QuestionSerializer(questions_sans_groupe, many=True).data
+        return Response({'examen': examen_data, 'questions': questions_data})
 
 
 class SoumettreExamenAPIView(APIView):

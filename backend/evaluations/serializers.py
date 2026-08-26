@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Examen, Question, Resultat, ReponseEleve, Progression
+from .models import Examen, Question, Resultat, ReponseEleve, Progression, ExerciceGroupe
 from pedagogie.serializers import MatiereSerializer
 from pedagogie.models import Matiere
 
@@ -7,6 +7,20 @@ from pedagogie.models import Matiere
 class ExamenCoursSimpleSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     titre = serializers.CharField()
+
+
+class QuestionStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'enonce', 'notion', 'bonne_reponse', 'type_question']
+
+
+class ExerciceGroupeSerializer(serializers.ModelSerializer):
+    etapes = QuestionStepSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ExerciceGroupe
+        fields = ['id', 'enonce_principal', 'ordre', 'etapes']
 
 
 class ExamenSerializer(serializers.ModelSerializer):
@@ -23,6 +37,13 @@ class ExamenSerializer(serializers.ModelSerializer):
 
     def get_matiere(self, obj):
         return {'id': obj.cours.matiere.id, 'nom': obj.cours.matiere.nom}
+
+
+class ExamenDetailSerializer(ExamenSerializer):
+    exercices_groupes = ExerciceGroupeSerializer(many=True, read_only=True, source='exercices_groupes.all')
+
+    class Meta(ExamenSerializer.Meta):
+        fields = ExamenSerializer.Meta.fields + ['exercices_groupes']
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -48,7 +69,7 @@ class ReponseEleveDetailSerializer(serializers.ModelSerializer):
 
 class ResultatSerializer(serializers.ModelSerializer):
     eleve = serializers.PrimaryKeyRelatedField(read_only=True)
-    examen = ExamenSerializer(read_only=True)
+    examen = ExamenDetailSerializer(read_only=True)
     reponses = serializers.SerializerMethodField()
 
     class Meta:
