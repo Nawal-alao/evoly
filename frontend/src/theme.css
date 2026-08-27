@@ -207,6 +207,10 @@ select:focus-visible, textarea:focus-visible {
 
 .nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; white-space: nowrap; }
 
+@media (min-width: 721px) {
+  .nav-liens .nav-actions { display: none; }
+}
+
 .bouton-menu-mobile {
   display: none;
   background: none;

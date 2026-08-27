@@ -89,9 +89,6 @@ export default function Layout() {
                     </>
                   ) : (
                     <>
-                      <Link to="/cours" onClick={() => setMenuOuvert(false)}>Cours</Link>
-                      <Link to="/mentors" onClick={() => setMenuOuvert(false)}>Mentors</Link>
-
                       <div className="nav-actions">
                         <Link to="/connexion" className="btn btn-secondaire" onClick={() => setMenuOuvert(false)}>Se connecter</Link>
                         <Link to="/inscription/eleve" className="btn btn-primaire" onClick={() => setMenuOuvert(false)}>Commencer</Link>
