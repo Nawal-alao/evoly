@@ -24,6 +24,12 @@ class Serie(models.TextChoices):
 class Matiere(models.Model):
 	nom = models.CharField(max_length=100, unique=True)
 	description = models.TextField(blank=True)
+	# Éditeur mathématique (KaTeX) activé par défaut pour cette matière.
+	# Les examens héritent de ce réglage sauf s'ils le surchargent.
+	editeur_math_actif = models.BooleanField(
+		default=False,
+		help_text="Activer l'éditeur mathématique (KaTeX) par défaut pour les examens de cette matière.",
+	)
 
 	def __str__(self):
 		return self.nom

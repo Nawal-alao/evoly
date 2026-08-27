@@ -3267,3 +3267,321 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===========================================================
+   Examen — passage (PasserExamen.jsx)
+   =========================================================== */
+
+/* --- Barre de progression (puces numérotées) sticky --- */
+.progression-examen {
+  position: sticky;
+  top: 64px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 12px 0 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: rgba(247, 243, 236, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--couleur-bordure);
+}
+.progression-examen::-webkit-scrollbar { display: none; }
+.puce-progression { flex-shrink: 0; }
+[data-theme="sombre"] .progression-examen {
+  background: rgba(26, 23, 20, 0.96);
+}
+.puce-progression {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-fond-carte);
+  color: var(--couleur-texte-doux);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.puce-progression:hover { border-color: var(--couleur-accent); color: var(--couleur-accent); }
+.puce-progression.repondue {
+  background: var(--couleur-succes);
+  border-color: var(--couleur-succes);
+  color: #fff;
+}
+.puce-progression.encours {
+  border-color: var(--couleur-accent);
+  color: var(--couleur-accent);
+  box-shadow: 0 0 0 3px var(--couleur-accent-doux);
+}
+
+/* --- Cartes questions --- */
+.carte-question {
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 24px;
+  margin-bottom: 18px;
+  scroll-margin-top: 140px;
+  box-shadow: var(--ombre);
+  min-width: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.carte-question[data-repondue="oui"] { border-color: var(--couleur-succes); }
+.carte-question:focus-within { border-color: var(--couleur-accent); box-shadow: 0 0 0 3px var(--couleur-accent-doux); }
+.carte-question .enonce { font-weight: 600; margin-bottom: 18px; font-size: 1.05rem; }
+.carte-question-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* Badges (pilule) */
+.badge-etape, .badge-question {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--couleur-accent-doux);
+  color: var(--couleur-accent);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.etat-reponse {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.etat-reponse.vide { color: var(--couleur-texte-doux); }
+.etat-reponse.vue { color: var(--couleur-succes); }
+
+/* --- Split View : groupe d'exercice --- */
+.exercice-groupe-bloc {
+  background: var(--couleur-fond, transparent);
+  border: 1px solid var(--couleur-accent);
+  border-radius: var(--rayon);
+  padding: 26px;
+  margin-bottom: 24px;
+  min-width: 0;
+}
+.exercice-groupe-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 26px;
+  /* stretch (valeur par défaut) : la colonne gauche couvre toute la
+     hauteur de la grille (= toutes les étapes), ce qui permet au
+     .contexte-cadre :sticky de rester épinglé pendant tout le défilement. */
+}
+/* Cellule « piste » (invisible) à gauche : elle fournit l'espace vertical dans
+   lequel la .contexte-cadre sticky peut se déplacer. Le min-height d'au moins
+   un écran garantit que, même si la carte de contexte est grande (jusqu'à
+   calc(100vh - 156px)), elle dispose toujours de la place de rester épinglée
+   (top:136px + hauteur de la carte) pendant toute la descente des étapes à
+   droite, sans remonter ni sortir trop tôt. */
+.contexte-desktop-uniquement {
+  min-width: 0;
+  min-height: calc(100vh);
+}
+.contexte-mobile-uniquement { display: none; }
+
+.contexte-cadre {
+  position: sticky;
+  top: 136px;
+  align-self: flex-start;
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(100vh - 156px);
+}
+.contexte-titre {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--couleur-accent);
+  margin-bottom: 10px;
+}
+.contexte-cadre .contenu-exercice-groupe,
+.contexte-accordion .contenu-exercice-groupe {
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.etapes-colonne { min-width: 0; }
+
+/* --- Accordéon du contexte (mobile) sticky sous la barre de progression --- */
+.contexte-accordion {
+  position: sticky;
+  top: 128px;
+  z-index: 15;
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon);
+  margin-bottom: 18px;
+  overflow: hidden;
+  box-shadow: var(--ombre);
+}
+.contexte-accordion-entete {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--couleur-fond-carte);
+  color: var(--couleur-texte);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.contexte-accordion-entete:hover { color: var(--couleur-accent); }
+.contexte-chevron {
+  font-size: 1.2rem;
+  color: var(--couleur-accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.contexte-accordion-corps {
+  padding: 4px 18px 18px;
+  border-top: 1px solid var(--couleur-bordure);
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+/* --- Champ de réponse mathématique (KaTeX-WYSIWYG) --- */
+.rep-math {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rep-math-ruban {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.rep-math-outil {
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-fond-carte);
+  color: var(--couleur-texte);
+  border-radius: var(--rayon-petit);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.rep-math-outil:hover { border-color: var(--couleur-accent); color: var(--couleur-accent); background: var(--couleur-accent-doux); }
+.rep-math-zone {
+  min-height: 64px;
+  padding: 14px 16px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-petit);
+  background: var(--couleur-fond);
+  color: var(--couleur-texte);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  cursor: text;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rep-math-zone:empty::before {
+  content: attr(data-placeholder);
+  color: var(--couleur-texte-doux);
+  pointer-events: none;
+}
+.rep-math-zone:focus { outline: none; border-color: var(--couleur-accent); box-shadow: 0 0 0 3px var(--couleur-accent-doux); }
+.rep-math-zone .katex { font-size: 1.15em; }
+.rep-math-zone span[contenteditable="false"] { display: inline-block; padding: 0 2px; }
+
+/* Zone MathLive */
+.rep-math-zone-ml {
+  min-height: 72px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-petit);
+  background: var(--couleur-fond-carte);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rep-math-zone-ml:focus-within {
+  border-color: var(--couleur-accent);
+  box-shadow: 0 0 0 3px var(--couleur-accent-doux);
+}
+.rep-math-zone-ml math-field {
+  /* Fond : transparent → la carte s'affiche (via .rep-math-zone-ml).
+     Couleur du texte mathématique : hérite du thème (blanc cassé en sombre). */
+  background: transparent;
+  color: var(--couleur-texte);
+  --primary: var(--couleur-accent);
+  --caret-color: var(--couleur-accent);
+  --selection-color: var(--couleur-texte);
+  --selection-background-color: var(--couleur-accent-doux);
+  --contains-highlight-background-color: var(--couleur-accent-doux);
+  --smart-fence-color: var(--couleur-accent);
+  --highlight-text: var(--couleur-accent-doux);
+  --latex-color: var(--couleur-texte);
+  font-size: 1.1rem;
+  padding: 6px 12px;
+}
+.rep-math-zone-ml math-field::part(placeholder) {
+  color: var(--couleur-texte-doux);
+}
+.rep-math-zone-ml math-field:focus {
+  outline: none;
+}
+
+/* Redéfinition complète des couleurs système de MathLive en mode sombre,
+   pour rendre la saisie lisible (fond carte sombre + texte clair). */
+[data-theme="sombre"] .rep-math-zone-ml math-field {
+  color: #F2EDE4;
+  --primary: #D4733F;
+  --caret-color: #D4733F;
+  --selection-color: #F2EDE4;
+  --selection-background-color: #3A2A1E;
+  --contains-highlight-background-color: #3A2A1E;
+  --smart-fence-color: #D4733F;
+  --highlight-text: #3A2A1E;
+  --latex-color: #F2EDE4;
+  color-scheme: dark;
+}
+
+.questions-independantes { min-width: 0; }
+
+/* Desktop : défilement global — pas de scroll confiné sur la colonne droite */
+/* Le contexte reste sticky (top:136px) pendant que la page défiler naturellement. */
+
+@media (max-width: 1024px) {
+  .exercice-groupe-split { grid-template-columns: 1fr; }
+  .contexte-desktop-uniquement { display: none; }
+  .contexte-mobile-uniquement { display: block; }
+
+  /* Accordéon du contexte collé sous la barre de progression */
+  .contexte-accordion { top: 128px; }
+}

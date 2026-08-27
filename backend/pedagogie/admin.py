@@ -24,7 +24,8 @@ class CoefficientMatiereInline(TabularInline):
 
 @admin.register(Matiere)
 class MatiereAdmin(ModelAdmin):
-    list_display = ("nom",)
+    list_display = ("nom", "editeur_math_actif")
+    list_editable = ("editeur_math_actif",)
     search_fields = ("nom",)
     inlines = [CoefficientMatiereInline]
 

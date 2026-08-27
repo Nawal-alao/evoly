@@ -33,8 +33,8 @@ class ExerciceGroupeInline(StackedInline):
 
 @admin.register(Examen)
 class ExamenAdmin(ModelAdmin):
-    list_display = ("titre", "cours", "type_generation", "statut_validation", "date_publication")
-    list_filter = ("statut_validation", "type_generation", "cours__matiere")
+    list_display = ("titre", "cours", "type_generation", "statut_validation", "editeur_math", "date_publication")
+    list_filter = ("statut_validation", "type_generation", "editeur_math", "cours__matiere")
     inlines = [ExerciceGroupeInline, QuestionInline]
  
     def save_model(self, request, obj, form, change):

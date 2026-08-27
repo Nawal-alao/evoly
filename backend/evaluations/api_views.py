@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from .models import Examen, Question, ReponseEleve, Resultat, Progression, HistoriqueProgression
+from .services import reponses_equivalentes
 from .serializers import (
     ExamenSerializer, ExamenDetailSerializer, QuestionSerializer, QuestionCorrectionSerializer,
     ResultatSerializer, ReponseEleveDetailSerializer, ProgressionSerializer,
@@ -77,7 +78,7 @@ class SoumettreExamenAPIView(APIView):
 
         for question in questions:
             reponse_donnee = reponses_map.get(question.id, '')
-            correct = (reponse_donnee.strip() == question.bonne_reponse.strip())
+            correct = reponses_equivalentes(reponse_donnee, question.bonne_reponse)
             ReponseEleve.objects.create(
                 eleve=eleve,
                 question=question,

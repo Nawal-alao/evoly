@@ -27,10 +27,11 @@ class ExamenSerializer(serializers.ModelSerializer):
     niveau_difficulte = serializers.CharField()
     cours = serializers.SerializerMethodField()
     matiere = serializers.SerializerMethodField()
+    editeur_math_effectif = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Examen
-        fields = ['id', 'titre', 'niveau_difficulte', 'cours', 'matiere', 'date_publication']
+        fields = ['id', 'titre', 'niveau_difficulte', 'cours', 'matiere', 'date_publication', 'editeur_math', 'editeur_math_effectif']
 
     def get_cours(self, obj):
         return {'id': obj.cours.id, 'titre': obj.cours.titre}

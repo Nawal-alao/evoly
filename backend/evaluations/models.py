@@ -19,7 +19,20 @@ class Examen(models.Model):
         FACILE = "FACILE", "Facile"
         MOYEN = "MOYEN", "Moyen"
         DIFFICILE = "DIFFICILE", "Difficile"
- 
+
+    # NOUVEAU : surcharge de l'éditeur mathématique au niveau de l'examen
+    class EditeurMath(models.TextChoices):
+        HERITER = "HERITER", "Hériter de la matière"
+        ACTIF = "ACTIF", "Actif"
+        INACTIF = "INACTIF", "Inactif"
+
+    editeur_math = models.CharField(
+        max_length=10,
+        choices=EditeurMath.choices,
+        default=EditeurMath.HERITER,
+        help_text="Contrôle l'affichage de la barre d'outils mathématiques (KaTeX) pour cet examen.",
+    )
+  
     titre = models.CharField(max_length=200)
     cours = models.ForeignKey("pedagogie.Cours", on_delete=models.CASCADE, related_name="examens")
     type_generation = models.CharField(max_length=10, choices=TypeGeneration.choices)
@@ -39,6 +52,15 @@ class Examen(models.Model):
  
     def __str__(self):
         return f"{self.titre} ({self.get_niveau_difficulte_display()})"
+
+    @property
+    def editeur_math_effectif(self):
+        """Résolution finale : override de l'examen sinon réglage de la matière."""
+        if self.editeur_math == self.EditeurMath.ACTIF:
+            return True
+        if self.editeur_math == self.EditeurMath.INACTIF:
+            return False
+        return bool(self.cours.matiere.editeur_math_actif)
  
  
  

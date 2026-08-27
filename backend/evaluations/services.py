@@ -164,3 +164,67 @@ def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="FACILE", uti
             )
 
     return examen
+
+
+# ---------------------------------------------------------------------------
+# Correction des réponses mathématiques (LaTeX)
+# ---------------------------------------------------------------------------
+
+_LATEX_ESPACES = re.compile(r"\\(?:,|;|:|!| |quad|qquad)")
+
+
+def _retirer_delimitieurs(expr):
+    """Retire les délimiteurs de math ($, $$, \\( \\), \\[ \\]) autour d'une chaîne."""
+    for gauche, droite in (("$$", "$$"), ("$", "$"), (r"\(", r"\)"), (r"\[", r"\]")):
+        if expr.startswith(gauche) and expr.endswith(droite) and len(expr) > len(gauche) + len(droite):
+            return expr[len(gauche):-len(droite)]
+    return expr
+
+
+def _retirer_zero_initiaux(expr):
+    """0999 -> 999 (conserve la valeur numérique 999)."""
+    return re.sub(r"\b0+(\d)", r"\1", expr)
+
+
+def _normaliser_latex(expr):
+    """
+    Normalise une expression LaTeX pour une comparaison tolérante.
+
+    - supprime les espaces sémantiques LaTeX (\\,, \\;, \\ , \\quad...)
+    - retire les accolades autour d'un nombre ou d'un unique token
+    - compacte tous les espaces
+    - retire les zéros initiaux des nombres
+    """
+    expr = _retirer_delimitieurs((expr or "").strip())
+    expr = _LATEX_ESPACES.sub("", expr)
+    # zéros initiaux : tant que les nombres sont isolés par leurs accolades
+    # (mot-frontière présent), 0999 -> 999 sans changer 230999.
+    expr = _retirer_zero_initiaux(expr)
+    # accolades autour d'un nombre décimal
+    expr = re.sub(r"\{(-?\d+(?:\.\d+)?|-\d+)\}", r"\1", expr)
+    # accolades autour d'un unique token (lettre, signe)
+    expr = re.sub(r"\{([a-zA-Z])\}", r"\1", expr)
+    expr = re.sub(r"\s+", "", expr)
+    return expr
+
+
+def reponses_equivalentes(reponse_donnee, bonne_reponse, tolerant=True):
+    """
+    Compare une réponse élève à la bonne réponse, en supportant le LaTeX.
+
+    - comparaison stricte après normalisation (espaces, accolades, zéros)
+    - si non égal et `tolerant` : retente en ignorant les délimiteurs `{}`
+      restants ou les commandes de format mineures.
+    """
+    if bonne_reponse is None:
+        return False
+    donnee = _normaliser_latex(reponse_donnee or "")
+    attendue = _normaliser_latex(bonne_reponse)
+    if donnee and donnee == attendue:
+        return True
+    if not tolerant:
+        return False
+    # tentative tolérante : vider les accolades restantes
+    donnee_libre = donnee.replace("{", "").replace("}", "")
+    attendue_libre = attendue.replace("{", "").replace("}", "")
+    return bool(donnee_libre) and donnee_libre == attendue_libre

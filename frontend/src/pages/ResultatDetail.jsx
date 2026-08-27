@@ -1,44 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import DOMPurify from 'dompurify'
-import loadKatex from '../utils/katexLoader'
 import api from '../api/axios'
 import ContenuRiche from '../components/ContenuRiche'
-
-const KATEX_DELIMITERS = {
-  delimiters: [
-    { left: '$$', right: '$$', display: true },
-    { left: '$', right: '$', display: false },
-    { left: '\\(', right: '\\)', display: false },
-    { left: '\\[', right: '\\]', display: true },
-  ],
-  throwOnError: false,
-}
-
-function KaTeXText({ text }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (ref.current) {
-      loadKatex().then(renderMathInElement => {
-        if (ref.current) renderMathInElement(ref.current, KATEX_DELIMITERS)
-      })
-    }
-  }, [text])
-  return <span ref={ref}>{text}</span>
-}
-
-function EnonceAvecMath({ html }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.innerHTML = DOMPurify.sanitize(html)
-      loadKatex().then(renderMathInElement => {
-        if (ref.current) renderMathInElement(ref.current, KATEX_DELIMITERS)
-      })
-    }
-  }, [html])
-  return <div ref={ref} />
-}
+import ReponseRicheMath from '../components/ReponseRicheMath'
 
 function LigneCorrection({ reponse }) {
   return (
@@ -51,11 +15,11 @@ function LigneCorrection({ reponse }) {
           {reponse.question?.notion}
         </p>
         <p style={{ marginBottom: 4 }}>
-          Ta réponse : <strong><KaTeXText text={reponse.reponse_donnee || '—'} /></strong>
+          Ta réponse : <strong><ReponseRicheMath value={reponse.reponse_donnee || '—'} /></strong>
         </p>
         {!reponse.correct && (
           <p style={{ color: 'var(--couleur-succes)', marginBottom: 0 }}>
-            Bonne réponse : <strong><KaTeXText text={reponse.question?.bonne_reponse || '—'} /></strong>
+            Bonne réponse : <strong><ReponseRicheMath value={reponse.question?.bonne_reponse || '—'} /></strong>
           </p>
         )}
       </div>

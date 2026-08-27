@@ -13,6 +13,7 @@
     "dompurify": "^3.4.13",
     "katex": "^0.18.4",
     "lucide-react": "^1.32.0",
+    "mathlive": "^0.110.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
