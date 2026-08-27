@@ -3552,8 +3552,25 @@ footer {
 .rep-math-zone-ml math-field::part(placeholder) {
   color: var(--couleur-texte-doux);
 }
-.rep-math-zone-ml math-field:focus {
+.rep-math-zone-ml math-field:focus,
+.rep-math-zone-ml math-field:focus-visible,
+.rep-math-zone-ml math-field:focus-within {
   outline: none;
+}
+/* Anneau blanc système porté par la prompt box interne (shadow DOM) :
+   MathLive applique « outline: highlight auto 1px » sur .ML__focusedPromptBox
+   (élément exposé via part="prompt"), hors de portée du CSS posé sur l'hôte
+   math-field. ::part(prompt) est le mécanisme officiel documenté pour l'atteindre. */
+.rep-math-zone-ml math-field::part(prompt) {
+  outline: none;
+}
+/* Icônes internes de MathLive (clavier + menu/hamburger) :
+   affichées uniquement sur desktop, masquées sur mobile. */
+@media (max-width: 720px) {
+  .rep-math-zone-ml math-field::part(virtual-keyboard-toggle),
+  .rep-math-zone-ml math-field::part(menu-toggle) {
+    display: none;
+  }
 }
 
 /* Redéfinition complète des couleurs système de MathLive en mode sombre,
