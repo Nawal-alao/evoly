@@ -1,14 +1,17 @@
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db.models import Max
+from django.db.models.functions import TruncDate
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from .models import Examen, Question, ReponseEleve, Resultat, Progression
+from .models import Examen, Question, ReponseEleve, Resultat, Progression, HistoriqueProgression
 from .serializers import (
     ExamenSerializer, ExamenDetailSerializer, QuestionSerializer, QuestionCorrectionSerializer,
     ResultatSerializer, ReponseEleveDetailSerializer, ProgressionSerializer,
+    HistoriqueProgressionSerializer,
 )
 
 
@@ -62,6 +65,11 @@ class SoumettreExamenAPIView(APIView):
         total_questions = len(questions)
         nombre_correct = 0
 
+        # Repassage : supprimer les anciennes réponses
+        ReponseEleve.objects.filter(
+            eleve=eleve, question__examen=examen,
+        ).delete()
+
         # Expect payload: {'reponses': [{'question_id': id, 'reponse': '...'}, ...]}
         reponses_payload = request.data.get('reponses', [])
         # Create a mapping from question id to provided answer
@@ -85,7 +93,11 @@ class SoumettreExamenAPIView(APIView):
 
         note = (nombre_correct / total_questions) * 20 if total_questions > 0 else 0
 
-        resultat = Resultat.objects.create(eleve=eleve, examen=examen, note=note)
+        resultat, _ = Resultat.objects.update_or_create(
+            eleve=eleve,
+            examen=examen,
+            defaults={"note": note},
+        )
 
         # Return the created resultat detail
         serializer = ResultatSerializer(resultat)
@@ -106,3 +118,50 @@ class MesProgressionsAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Progression.objects.filter(eleve=self.request.user.profil_eleve).select_related('matiere')
+
+
+class HistoriqueProgressionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        eleve = request.user.profil_eleve
+        matiere_id = request.query_params.get('matiere')
+
+        matieres_avec_historique = (
+            HistoriqueProgression.objects
+            .filter(eleve=eleve)
+            .values_list('matiere_id', flat=True)
+            .distinct()
+        )
+
+        if not matiere_id:
+            from pedagogie.models import Matiere
+            matieres = Matiere.objects.filter(id__in=matieres_avec_historique).values('id', 'nom')
+            return Response({
+                'matieres': list(matieres),
+                'points': [],
+            })
+
+        il_y_a_30_jours = timezone.now() - timezone.timedelta(days=30)
+
+        # Pour chaque jour, récupérer l'id du snapshot le plus tardif
+        latest_ids = (
+            HistoriqueProgression.objects
+            .filter(eleve=eleve, matiere_id=matiere_id, date_snapshot__gte=il_y_a_30_jours)
+            .annotate(jour=TruncDate('date_snapshot'))
+            .values('jour')
+            .annotate(dernier_id=Max('id'))
+            .values_list('dernier_id', flat=True)
+        )
+
+        points = (
+            HistoriqueProgression.objects
+            .filter(id__in=latest_ids)
+            .order_by('date_snapshot')
+            .values('date_snapshot', 'niveau_maitrise')
+        )
+
+        return Response({
+            'matieres': [],
+            'points': list(points),
+        })

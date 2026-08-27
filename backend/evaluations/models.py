@@ -144,5 +144,24 @@ class Progression(models.Model):
 
 		self.save()
 
+		HistoriqueProgression.objects.create(
+			eleve=self.eleve,
+			matiere=self.matiere,
+			niveau_maitrise=self.niveau_maitrise,
+		)
+
 	def __str__(self):
 		return f"Progression {self.eleve} - {self.matiere} ({self.niveau_maitrise}%)"
+
+
+class HistoriqueProgression(models.Model):
+	eleve = models.ForeignKey('comptes.Eleve', on_delete=models.CASCADE, related_name="historique_progressions")
+	matiere = models.ForeignKey('pedagogie.Matiere', on_delete=models.CASCADE)
+	niveau_maitrise = models.DecimalField(max_digits=5, decimal_places=2)
+	date_snapshot = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		ordering = ["date_snapshot"]
+
+	def __str__(self):
+		return f"Historique {self.eleve} - {self.matiere} : {self.niveau_maitrise}% ({self.date_snapshot:%d/%m/%Y})"

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Examen, Question, Resultat, ReponseEleve, Progression, ExerciceGroupe
+from .models import Examen, Question, Resultat, ReponseEleve, Progression, ExerciceGroupe, HistoriqueProgression
 from pedagogie.serializers import MatiereSerializer
 from pedagogie.models import Matiere
 
@@ -87,3 +87,11 @@ class ProgressionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Progression
         fields = ['id', 'matiere', 'matiere_nom', 'niveau_maitrise', 'notions_faibles', 'derniere_mise_a_jour']
+
+
+class HistoriqueProgressionSerializer(serializers.ModelSerializer):
+    matiere_nom = serializers.CharField(source='matiere.nom', read_only=True)
+
+    class Meta:
+        model = HistoriqueProgression
+        fields = ['id', 'matiere', 'matiere_nom', 'niveau_maitrise', 'date_snapshot']

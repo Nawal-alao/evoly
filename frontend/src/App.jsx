@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import Layout from './components/Layout'
@@ -26,6 +27,7 @@ const ConversationDetail = React.lazy(() => import('./pages/ConversationDetail')
 
 export default function App() {
   return (
+    <ThemeProvider>
     <NotificationProvider>
       <AuthProvider>
         <Routes>
@@ -45,6 +47,8 @@ export default function App() {
             <Route path="/resultats/:id" element={<RouteProtegee><ResultatDetail /></RouteProtegee>} />
             <Route path="/mentors" element={<RouteProtegee><Mentors /></RouteProtegee>} />
             <Route path="/profil" element={<RouteProtegee><Profil /></RouteProtegee>} />
+            <Route path="/profil/eleve" element={<RouteProtegee><Profil /></RouteProtegee>} />
+            <Route path="/profil/mentor" element={<RouteProtegee><Profil /></RouteProtegee>} />
             <Route path="/abonnement" element={<RouteProtegee><Abonnement /></RouteProtegee>} />
             <Route path="/communaute" element={<RouteProtegee><Communaute /></RouteProtegee>} />
             <Route path="/communaute/:id" element={<RouteProtegee><GroupeDetail /></RouteProtegee>} />
@@ -54,5 +58,6 @@ export default function App() {
         </Routes>
       </AuthProvider>
     </NotificationProvider>
+    </ThemeProvider>
   )
 }

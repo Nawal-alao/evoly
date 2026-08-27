@@ -2,12 +2,11 @@
 evaluations/services.py — Génération d'examen par IA (Cohere)
 ===============================================================================
 Logique métier isolée du code d'admin. N'importe quel endroit du projet
-(admin, commande, vue future) peut réutiliser cette fonction sans
+(a$dmin, commande, vue future) peut réutiliser cette fonction sans
 dupliquer de code.
 
 Structure de réponse attendue de Cohere :
-  - "exercices"   → ExerciceGroupe + Question(COURTE) en étapes
-  - "questions_qcm" → Question(QCM) classiques (FACILE uniquement)
+  - "exercices" → ExerciceGroupe + Question(COURTE) en étapes
 """
 
 import json
@@ -34,12 +33,14 @@ def _texte_brut(contenu_html):
 
 SCHEMA_REPONSE = {
     "type": "object",
+    "required": ["exercices"],
     "properties": {
         "exercices": {
             "type": "array",
             "description": "Exercices décomposés en étapes courtes et vérifiables.",
             "items": {
                 "type": "object",
+                "required": ["enonce_principal", "etapes"],
                 "properties": {
                     "enonce_principal": {
                         "type": "string",
@@ -49,6 +50,7 @@ SCHEMA_REPONSE = {
                         "type": "array",
                         "items": {
                             "type": "object",
+                            "required": ["enonce", "notion", "reponse_courte"],
                             "properties": {
                                 "enonce": {
                                     "type": "string",
@@ -63,35 +65,9 @@ SCHEMA_REPONSE = {
                                     "description": "Réponse exacte en un nombre, une expression courte ou un mot.",
                                 },
                             },
-                            "required": ["enonce", "notion", "reponse_courte"],
                         },
                     },
                 },
-                "required": ["enonce_principal", "etapes"],
-            },
-        },
-        "questions_qcm": {
-            "type": "array",
-            "description": "Questions à choix multiple (UNIQUEMENT pour le niveau FACILE).",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "enonce": {"type": "string"},
-                    "notion": {
-                        "type": "string",
-                        "description": "Thème précis évalué.",
-                    },
-                    "choix": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Exactement 4 propositions de réponse.",
-                    },
-                    "bonne_reponse": {
-                        "type": "string",
-                        "description": "Doit correspondre exactement à l'une des valeurs de 'choix'.",
-                    },
-                },
-                "required": ["enonce", "notion", "choix", "bonne_reponse"],
             },
         },
     },
@@ -99,7 +75,7 @@ SCHEMA_REPONSE = {
 
 
 # ---------------------------------------------------------------------------
-# Prompt système + instructions par niveau
+# Prompt système
 # ---------------------------------------------------------------------------
 
 PROMPT_SYSTEME = """Tu es un professeur qui conçoit des examens pour des élèves du \
@@ -119,47 +95,14 @@ Règles générales :
 - Réponds UNIQUEMENT en JSON valide, sans aucun texte autour."""
 
 
-NIVEAUX_INSTRUCTIONS = {
-    "FACILE": (
-        "Niveau FACILE — autorise les deux formats :\n"
-        "1) Exercices décomposés en étapes courtes et vérifiables (champs \"exercices\").\n"
-        "2) Questions à choix multiple simples, application directe d'une seule notion "
-        "(champs \"questions_qcm\").\n"
-        "Tu peux mélanger les deux formats. Application directe, pas de piège, "
-        "pour un élève qui découvre le sujet."
-    ),
-    "MOYEN": (
-        "Niveau MOYEN — format EXCLUSIF :\n"
-        "Tu dois générer UNIQUEMENT des exercices décomposés en étapes courtes "
-        "(champs \"exercices\"). JAMAIS de QCM.\n"
-        "Chaque problème est décomposé en plusieurs étapes vérifiables automatiquement. "
-        "L'élève combine deux notions ou applique la notion à un cas légèrement "
-        "différent de l'exemple du cours.\n"
-        "Le champ \"questions_qcm\" ne doit PAS être présent dans ta réponse."
-    ),
-    "DIFFICILE": (
-        "Niveau DIFFICILE — format EXCLUSIF :\n"
-        "Tu dois générer UNIQUEMENT des exercices décomposés en étapes courtes "
-        "(champs \"exercices\"). JAMAIS de QCM.\n"
-        "Chaque problème exige un raisonnement en plusieurs étapes, une mise en "
-        "situation complexe, ou la combinaison de plusieurs notions du cours. "
-        "Chaque étape reste courte et vérifiable (nombre, expression, mot). "
-        "L'élève décompose le raisonnement pas à pas.\n"
-        "Le champ \"questions_qcm\" ne doit PAS être présent dans ta réponse."
-    ),
-}
-
-
 # ---------------------------------------------------------------------------
 # Fonction principale
 # ---------------------------------------------------------------------------
 
-def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="MOYEN", utilisateur_createur=None):
+def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="FACILE", utilisateur_createur=None):
     """
-    Génère un examen via Cohere en fonction du niveau de difficulté.
-
-    - FACILE : QCM + exercices en cascade (les deux formats mélangés)
-    - MOYEN / DIFFICILE : uniquement des ExerciceGroupe avec étapes COURTE
+    Génère un examen via Cohere : des exercices décomposés en étapes courtes
+    et vérifiables automatiquement.
     """
     sequences = cours.sequences.all()
     contenu_complet = "\n\n".join(
@@ -175,12 +118,10 @@ def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="MOYEN", util
 
     client = cohere.ClientV2(api_key=settings.COHERE_API_KEY)
 
-    instruction_niveau = NIVEAUX_INSTRUCTIONS.get(niveau_difficulte, NIVEAUX_INSTRUCTIONS["MOYEN"])
-
     message_utilisateur = (
         f"Génère un examen en français, niveau de difficulté « {niveau_difficulte} ».\n"
         f"Nombre total d'éléments : {nombre_questions}.\n\n"
-        f"Instructions pour ce niveau :\n{instruction_niveau}\n\n"
+        f"Chaque exercice doit être décomposé en étapes courtes et vérifiables.\n\n"
         f"Portant sur ce cours de {cours.matiere.nom} "
         f"({cours.get_classe_scolaire_display()}) :\n\n{contenu_complet}"
     )
@@ -196,9 +137,8 @@ def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="MOYEN", util
 
     donnees = json.loads(reponse.message.content[0].text)
 
-    noms_niveaux = {"FACILE": "Facile", "MOYEN": "Moyen", "DIFFICILE": "Difficile"}
     examen = Examen.objects.create(
-        titre=f"Examen {noms_niveaux.get(niveau_difficulte, '')} — {cours.titre}",
+        titre=f"Examen — {cours.titre}",
         cours=cours,
         type_generation=Examen.TypeGeneration.IA,
         statut_validation=Examen.StatutValidation.EN_ATTENTE,
@@ -206,7 +146,6 @@ def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="MOYEN", util
         date_publication=timezone.now(),
     )
 
-    # --- Exercices en cascade (tous les niveaux) ---
     for idx_ex, exercice in enumerate(donnees.get("exercices", []), start=1):
         groupe = ExerciceGroupe.objects.create(
             examen=examen,
@@ -223,16 +162,5 @@ def generer_examen_ia(cours, nombre_questions=5, niveau_difficulte="MOYEN", util
                 notion=etape["notion"],
                 bonne_reponse=etape["reponse_courte"],
             )
-
-    # --- Questions QCM (FACILE uniquement) ---
-    for q in donnees.get("questions_qcm", []):
-        Question.objects.create(
-            examen=examen,
-            enonce=q["enonce"],
-            type_question=Question.Type.CHOIX_MULTIPLE,
-            notion=q["notion"],
-            choix_reponses=q["choix"],
-            bonne_reponse=q["bonne_reponse"],
-        )
 
     return examen
