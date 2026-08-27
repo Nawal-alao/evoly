@@ -1435,7 +1435,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: var(--rayon);
   padding: 26px;
   margin-bottom: 24px;
-  overflow: hidden;
+  overflow: visible;
   min-width: 0;
 }
 .exercice-groupe-enonce {
@@ -3377,25 +3377,20 @@ footer {
   border-radius: var(--rayon);
   padding: 26px;
   margin-bottom: 24px;
+  overflow: visible;
   min-width: 0;
 }
 .exercice-groupe-split {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   gap: 26px;
-  /* stretch (valeur par défaut) : la colonne gauche couvre toute la
-     hauteur de la grille (= toutes les étapes), ce qui permet au
-     .contexte-cadre :sticky de rester épinglé pendant tout le défilement. */
+  /* align-items: stretch (valeur par défaut) : la colonne gauche couvre
+     naturellement toute la hauteur de la grille (= toutes les étapes),
+     ce qui permet au .contexte-cadre sticky de rester épinglé pendant
+     tout le défilement des étapes. */
 }
-/* Cellule « piste » (invisible) à gauche : elle fournit l'espace vertical dans
-   lequel la .contexte-cadre sticky peut se déplacer. Le min-height d'au moins
-   un écran garantit que, même si la carte de contexte est grande (jusqu'à
-   calc(100vh - 156px)), elle dispose toujours de la place de rester épinglée
-   (top:136px + hauteur de la carte) pendant toute la descente des étapes à
-   droite, sans remonter ni sortir trop tôt. */
 .contexte-desktop-uniquement {
   min-width: 0;
-  min-height: calc(100vh);
 }
 .contexte-mobile-uniquement { display: none; }
 
