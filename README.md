@@ -54,6 +54,22 @@ En développement, le proxy Vite transmet `/api` vers `http://127.0.0.1:8000`
 : aucune variable d'environnement n'est nécessaire. En production,
 `VITE_API_URL` pointe vers le backend déployé (voir `frontend/.env.example`).
 
+### Tests et qualité (backend)
+
+Les outils de développement sont dans `backend/requirements-dev.txt`
+(`pip install -r requirements-dev.txt`).
+
+```bash
+cd backend
+pytest                    # suite de tests (settings dédiés : evoly/settings_test.py)
+pytest --collect-only -q   # lister les tests
+ruff check .               # lint
+ruff check . --fix         # corrections automatiques
+```
+
+La configuration du lint est dans `backend/ruff.toml`. Les migrations sont
+exclues du lint : elles sont générées par Django et ne sont jamais retouchées.
+
 ## Déploiement
 
 | Composant | Hébergeur | Rôle |
