@@ -37,6 +37,7 @@ class ListeExamensDisponiblesViewTests(TestCase):
             cours=self.cours_valide,
             type_generation=Examen.TypeGeneration.MANUEL,
             date_publication=timezone.now() - timedelta(days=1),
+            statut_validation=Examen.StatutValidation.VALIDE,
         )
 
         self.examen_futur = Examen.objects.create(
