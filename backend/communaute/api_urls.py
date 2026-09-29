@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import api_views
 
 urlpatterns = [
@@ -11,5 +12,9 @@ urlpatterns = [
 
     path('conversations/', api_views.ConversationsListAPIView.as_view(), name='api_conversations_list'),
     path('conversations/<int:pk>/', api_views.ConversationDetailAPIView.as_view(), name='api_conversation_detail'),
-    path('conversations/<int:pk>/envoyer/', api_views.EnvoyerMessagePriveAPIView.as_view(), name='api_conversation_envoyer'),
+    path(
+        'conversations/<int:pk>/envoyer/',
+        api_views.EnvoyerMessagePriveAPIView.as_view(),
+        name='api_conversation_envoyer',
+    ),
 ]

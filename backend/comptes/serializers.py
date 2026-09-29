@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Eleve, Mentor, SuiviMentor
 from pedagogie.models import Matiere
+
+from .models import Eleve, Mentor, SuiviMentor
 
 
 class EleveSerializer(serializers.ModelSerializer):
@@ -41,7 +42,10 @@ class SuiviMentorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SuiviMentor
-        fields = ['id', 'eleve', 'eleve_name', 'mentor', 'mentor_name', 'matiere', 'matiere_nom', 'date_debut', 'actif', 'note_evaluation']
+        fields = [
+            'id', 'eleve', 'eleve_name', 'mentor', 'mentor_name',
+            'matiere', 'matiere_nom', 'date_debut', 'actif', 'note_evaluation',
+        ]
         read_only_fields = ['id', 'date_debut']
 
     def get_eleve_name(self, obj):

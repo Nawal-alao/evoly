@@ -1,14 +1,16 @@
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
 from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-from .models import Eleve, Mentor, SuiviMentor
+from .models import Mentor, SuiviMentor
 from .serializers import (
-    EleveSerializer, MentorSerializer, SuiviMentorSerializer,
-    InscriptionEleveSerializer, InscriptionMentorSerializer,
+    EleveSerializer,
+    InscriptionEleveSerializer,
+    InscriptionMentorSerializer,
+    MentorSerializer,
+    SuiviMentorSerializer,
 )
 
 

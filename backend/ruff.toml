@@ -1,0 +1,28 @@
+# Configuration ruff (lint) du backend Django.
+# Lancer : ruff check .          (tout le backend)
+#          ruff check . --fix    (corrections automatiques)
+line-length = 120
+target-version = "py312"
+# Les migrations sont générées par Django : jamais retouchées, donc jamais lintées.
+extend-exclude = ["*/migrations/*"]
+
+[lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "C4",  # comprehensions
+    "RUF", # regles specifiques ruff
+]
+ignore = [
+    # Django et DRF utilisent les attributs de classe comme DSL (admin.list_display,
+    # champs de serializer, permission_classes, Meta.fields) : RUF012 les signale a tort.
+    "RUF012",
+]
+
+[lint.per-file-ignores]
+# Les settings doivent definir l'environnement avant d'importer (E402)
+# et republient les reglages de base via un import star (F403/F405).
+"evoly/settings*.py" = ["E402", "F403", "F405"]

@@ -58,7 +58,8 @@ else:
 # (ex: CORS_ALLOWED_ORIGINS=https://evoly.vercel.app,https://evoly-api.onrender.com)
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
-] + _liste_env('CORS_ALLOWED_ORIGINS')
+    *_liste_env('CORS_ALLOWED_ORIGINS'),
+]
 CSRF_TRUSTED_ORIGINS = _liste_env('CSRF_TRUSTED_ORIGINS')
 
 CSRF_COOKIE_HTTPONLY = True

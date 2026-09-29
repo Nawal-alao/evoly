@@ -1,19 +1,21 @@
-from django.utils import timezone
-from django.shortcuts import get_object_or_404
 from django.db.models import Max
 from django.db.models.functions import TruncDate
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Examen, Question, ReponseEleve, Resultat, Progression, HistoriqueProgression
-from .services import reponses_equivalentes
+from .models import Examen, HistoriqueProgression, Progression, ReponseEleve, Resultat
 from .serializers import (
-    ExamenSerializer, ExamenDetailSerializer, QuestionSerializer, QuestionCorrectionSerializer,
-    ResultatSerializer, ReponseEleveDetailSerializer, ProgressionSerializer,
-    HistoriqueProgressionSerializer,
+    ExamenDetailSerializer,
+    ExamenSerializer,
+    ProgressionSerializer,
+    QuestionSerializer,
+    ResultatSerializer,
 )
+from .services import reponses_equivalentes
 
 
 def _examens_accessibles_pour(user):

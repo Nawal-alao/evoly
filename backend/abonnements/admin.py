@@ -7,10 +7,12 @@ d'un établissement qui vient de payer, sans avoir à cliquer élève par
 élève.
 """
 
+from datetime import timedelta
+
 from django.contrib import admin
 from django.utils import timezone
-from datetime import timedelta
 from unfold.admin import ModelAdmin
+
 from .models import Abonnement
 
 

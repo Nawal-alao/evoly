@@ -1,6 +1,7 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import GroupeEtude, Message, Signalement, MotInterdit
+
+from .models import GroupeEtude, Message, MotInterdit, Signalement
 
 
 @admin.register(GroupeEtude)

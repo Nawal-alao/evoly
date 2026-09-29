@@ -1,12 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
-from django.db.models import Max
 
-from .models import Matiere, Cours, CoursTermine, CoursFavori, CoursProgression
-from .serializers import MatiereSerializer, CoursSerializer
+from .models import Cours, CoursFavori, CoursProgression, CoursTermine, Matiere
+from .serializers import CoursSerializer, MatiereSerializer
 from .views import _cours_de_lutilisateur
 
 

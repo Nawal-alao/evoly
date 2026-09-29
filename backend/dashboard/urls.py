@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import AccueilView, DashboardEleveView, DashboardMentorView
 
 app_name = "dashboard"

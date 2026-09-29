@@ -1,17 +1,19 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import GroupeEtude, Message, Signalement, MessagePrive
+from .models import GroupeEtude, Message, MessagePrive, Signalement
 from .serializers import (
-    GroupeSerializer, GroupeDetailSerializer, MessageSerializer,
-    SignalementSerializer, MessagePriveSerializer, ProposerGroupeSerializer,
+    GroupeSerializer,
+    MessagePriveSerializer,
+    MessageSerializer,
+    ProposerGroupeSerializer,
+    SignalementSerializer,
 )
 from .services import contient_mot_interdit
 from .views import _groupes_de_lutilisateur, _suivis_de_lutilisateur
-from django.contrib.auth.models import User
 
 
 class GroupesListAPIView(generics.ListAPIView):
@@ -167,7 +169,10 @@ class EnvoyerMessagePriveAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        statut = MessagePrive.Statut.EN_ATTENTE if contenu and contient_mot_interdit(contenu) else MessagePrive.Statut.VISIBLE
+        contenu_interdit = contenu and contient_mot_interdit(contenu)
+        statut = (
+            MessagePrive.Statut.EN_ATTENTE if contenu_interdit else MessagePrive.Statut.VISIBLE
+        )
         msg = MessagePrive.objects.create(
             suivi=suivi, auteur=request.user,
             contenu=contenu, image=image, statut=statut,

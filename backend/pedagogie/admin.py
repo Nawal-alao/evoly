@@ -9,9 +9,10 @@ qu'on a construit ensemble sur cette app :
 
 from django.contrib import admin, messages
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
-from .models import Matiere, CoefficientMatiere, Cours, Sequence, CoursProgression
+
 from evaluations.services import generer_examen_ia
 
+from .models import CoefficientMatiere, Cours, CoursProgression, Matiere, Sequence
 
 # ---------------------------------------------------------------------------
 # MATIÈRE

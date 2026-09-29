@@ -1,7 +1,8 @@
 import string
+
 from .models import MotInterdit
- 
- 
+
+
 def contient_mot_interdit(texte):
     """
     Retourne True si au moins un mot du texte correspond exactement

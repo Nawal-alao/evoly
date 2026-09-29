@@ -1,7 +1,9 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin, StackedInline
-from .models import Progression, Examen, Question, Resultat, ReponseEleve, ExerciceGroupe
- 
+
+from .models import Examen, ExerciceGroupe, Progression, Question, Resultat
+
+
 @admin.action(description="Recalculer la progression sélectionnée")
 def recalculer_progression(modeladmin, request, queryset):
     for progression in queryset:

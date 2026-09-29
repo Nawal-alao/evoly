@@ -1,13 +1,13 @@
 from django.urls import path
 
 from .views import (
+    DetailConversationView,
     DetailGroupeView,
+    EnvoyerMessagePriveView,
     EnvoyerMessageView,
+    ListeConversationsView,
     ListeGroupesView,
     SignalerMessageView,
-    ListeConversationsView,
-    DetailConversationView,
-    EnvoyerMessagePriveView,
 )
 
 app_name = "communaute"

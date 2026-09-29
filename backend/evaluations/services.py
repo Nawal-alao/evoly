@@ -11,11 +11,12 @@ Structure de réponse attendue de Cohere :
 
 import json
 import re
+
 import cohere
 from django.conf import settings
 from django.utils import timezone
 
-from .models import Examen, Question, ExerciceGroupe
+from .models import Examen, ExerciceGroupe, Question
 
 
 def _texte_brut(contenu_html):

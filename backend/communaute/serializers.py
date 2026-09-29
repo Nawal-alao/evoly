@@ -1,7 +1,9 @@
-from rest_framework import serializers
-from .models import GroupeEtude, Message, Signalement, MessagePrive, MotInterdit
 from django.contrib.auth.models import User
+from rest_framework import serializers
+
 from pedagogie.models import Matiere
+
+from .models import GroupeEtude, Message, MessagePrive, Signalement
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):

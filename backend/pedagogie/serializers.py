@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Matiere, Cours, Sequence
+
+from .models import Cours, Matiere, Sequence
 
 
 class MatiereSerializer(serializers.ModelSerializer):
@@ -27,7 +28,10 @@ class CoursSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cours
-        fields = ['id', 'titre', 'description', 'matiere', 'classe_scolaire', 'serie', 'contenu', 'statut_validation', 'sequences', 'termine', 'favori']
+        fields = [
+            'id', 'titre', 'description', 'matiere', 'classe_scolaire', 'serie',
+            'contenu', 'statut_validation', 'sequences', 'termine', 'favori',
+        ]
         read_only_fields = ['id', 'statut_validation', 'sequences', 'termine', 'favori']
 
     def get_termine(self, obj):

@@ -1,12 +1,14 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import DetailView, ListView, View
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages as django_messages
-from comptes.models import SuiviMentor
-from .models import MessagePrive
-from .services import contient_mot_interdit
-from .models import GroupeEtude, Message, MotInterdit, Signalement
 import string
+
+from django.contrib import messages as django_messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import DetailView, ListView, View
+
+from comptes.models import SuiviMentor
+
+from .models import GroupeEtude, Message, MessagePrive, MotInterdit, Signalement
+from .services import contient_mot_interdit
 
 
 def _groupes_de_lutilisateur(user):
@@ -86,9 +88,6 @@ class EnvoyerMessageView(LoginRequiredMixin, View):
         return redirect("communaute:detail_groupe", pk=groupe.pk)
 
 
-from django.contrib import messages
-
-
 class SignalerMessageView(LoginRequiredMixin, View):
 
     SEUIL_ALERTE = 3
@@ -97,21 +96,21 @@ class SignalerMessageView(LoginRequiredMixin, View):
         message = get_object_or_404(Message, pk=kwargs["pk"])
         motif = request.POST.get("motif", "").strip()
 
-        signalement, cree = Signalement.objects.get_or_create(
+        _signalement, cree = Signalement.objects.get_or_create(
             message=message,
             signale_par=request.user,
             defaults={"motif": motif},
         )
 
         if cree:
-            messages.success(request, "Votre signalement a bien été enregistré.")
+            django_messages.success(request, "Votre signalement a bien été enregistré.")
 
             nombre_signalements = message.signalements.count()
             if nombre_signalements >= self.SEUIL_ALERTE and message.statut == Message.Statut.VISIBLE:
                 message.statut = Message.Statut.SIGNALE
                 message.save()
         else:
-            messages.info(request, "Vous avez déjà signalé ce message.")
+            django_messages.info(request, "Vous avez déjà signalé ce message.")
 
         return redirect("communaute:detail_groupe", pk=message.groupe.pk)
 

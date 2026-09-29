@@ -1,13 +1,15 @@
-from django.contrib.auth.models import User
-from django.views.generic import CreateView, ListView, UpdateView, View
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.contrib import messages
+from django.views.generic import CreateView, ListView, UpdateView, View
+
+from pedagogie.models import Matiere
 
 from .models import Eleve, Mentor, SuiviMentor
-from pedagogie.models import Matiere
+
 
 class InscriptionEleveView(CreateView):
     model = Eleve
@@ -100,7 +102,7 @@ class SuivreMentorView(LoginRequiredMixin, View):
             )
             return redirect("abonnements:souscrire")
 
-        suivi, cree = SuiviMentor.objects.get_or_create(
+        _suivi, cree = SuiviMentor.objects.get_or_create(
             eleve=eleve, mentor=mentor, matiere=matiere,
         )
 

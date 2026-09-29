@@ -1,9 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import DetailView, View, ListView
-from .models import Progression
-from .models import Examen, Question, ReponseEleve, Resultat
+from django.views.generic import DetailView, ListView, View
+
+from .models import Examen, Progression, ReponseEleve, Resultat
 
 
 class ListeExamensDisponiblesView(LoginRequiredMixin, ListView):

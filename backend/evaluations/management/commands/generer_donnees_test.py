@@ -8,18 +8,23 @@ Utilise --detruire pour supprimer toutes les données de test.
 """
 
 import random
-from decimal import Decimal
 from datetime import timedelta
+from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from comptes.models import Eleve
-from pedagogie.models import Matiere, Cours
 from evaluations.models import (
-    Examen, Question, ExerciceGroupe, Resultat, ReponseEleve,
-    HistoriqueProgression, Progression,
+    Examen,
+    ExerciceGroupe,
+    HistoriqueProgression,
+    Progression,
+    Question,
+    ReponseEleve,
+    Resultat,
 )
+from pedagogie.models import Cours, Matiere
 
 PREFIXE_TEST = "TEST-GRAPHIQUE"
 
@@ -58,11 +63,6 @@ class Command(BaseCommand):
                     f"  → Vérifie l'email ou le username dans admin Django (comptes → utilisateurs)"
                 ))
                 return
-        except Eleve.DoesNotExist:
-            self.stderr.write(self.style.ERROR(
-                f"Élève introuvable : {options['eleve']}"
-            ))
-            return
 
         matiere = Matiere.objects.filter(nom__icontains=options["matiere"]).first()
         if not matiere:

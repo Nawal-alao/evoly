@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Examen, Question, Resultat, ReponseEleve, Progression, ExerciceGroupe, HistoriqueProgression
-from pedagogie.serializers import MatiereSerializer
-from pedagogie.models import Matiere
+
+from .models import Examen, ExerciceGroupe, HistoriqueProgression, Progression, Question, ReponseEleve, Resultat
 
 
 class ExamenCoursSimpleSerializer(serializers.Serializer):
@@ -31,7 +30,10 @@ class ExamenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Examen
-        fields = ['id', 'titre', 'niveau_difficulte', 'cours', 'matiere', 'date_publication', 'editeur_math', 'editeur_math_effectif']
+        fields = [
+            'id', 'titre', 'niveau_difficulte', 'cours', 'matiere', 'date_publication',
+            'editeur_math', 'editeur_math_effectif',
+        ]
 
     def get_cours(self, obj):
         return {'id': obj.cours.id, 'titre': obj.cours.titre}
@@ -44,7 +46,7 @@ class ExamenDetailSerializer(ExamenSerializer):
     exercices_groupes = ExerciceGroupeSerializer(many=True, read_only=True, source='exercices_groupes.all')
 
     class Meta(ExamenSerializer.Meta):
-        fields = ExamenSerializer.Meta.fields + ['exercices_groupes']
+        fields = [*ExamenSerializer.Meta.fields, 'exercices_groupes']
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -78,7 +80,11 @@ class ResultatSerializer(serializers.ModelSerializer):
         fields = ['id', 'eleve', 'examen', 'note', 'date_passage', 'reponses']
 
     def get_reponses(self, obj):
-        reponses = ReponseEleve.objects.filter(eleve=obj.eleve, question__examen=obj.examen).select_related('question').order_by('question__id')
+        reponses = (
+            ReponseEleve.objects.filter(eleve=obj.eleve, question__examen=obj.examen)
+            .select_related('question')
+            .order_by('question__id')
+        )
         return ReponseEleveDetailSerializer(reponses, many=True).data
 
 

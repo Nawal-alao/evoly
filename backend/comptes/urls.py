@@ -1,12 +1,16 @@
 from django.urls import path
+
 from .views import (
-    InscriptionEleveView,
-    InscriptionMentorView,
     ConnexionView,
     DeconnexionView,
+    InscriptionEleveView,
+    InscriptionMentorView,
+    ListeMentorsView,
     NoterMentorView,
+    ProfilEleveView,
+    ProfilMentorView,
+    SuivreMentorView,
 )
-from .views import ListeMentorsView, SuivreMentorView, ProfilEleveView, ProfilMentorView
 
 app_name = "comptes"
 

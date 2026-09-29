@@ -1,8 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView
+from django.views.generic import DetailView, ListView
+
 from .models import Cours
- 
- 
+
+
 def _cours_de_lutilisateur(user):
     """
     Retourne les Cours accessibles à l'utilisateur connecté.
